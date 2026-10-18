@@ -1,0 +1,33 @@
+# Secrets — never commit the real .env
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# ReqVerify runtime artefacts (archive the final cache as a release artefact instead)
+cache/*.sqlite
+runs/**/traces/
+
+# Node / Next.js (TechStore SUT)
+node_modules/
+.next/
+out/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Research documents (kept local, not published)
+/*.pdf
