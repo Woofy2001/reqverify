@@ -1,0 +1,13 @@
+- heading "Checkout" [level=1]
+- navigation "Checkout steps":
+  - link "1. Shipping Address" [current]
+  - link "2. Payment Method"
+  - link "3. Review & Place Order"
+- heading "Shipping Address" [level=2]
+- textbox "Full name"
+- textbox "Street address"
+- textbox "City"
+- combobox "State / Province"
+- textbox "Postal code"
+- checkbox "Billing address matches shipping address" [checked]
+- button "Continue to Payment"

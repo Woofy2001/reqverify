@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reqverify"
+version = "0.1.0"
+description = "A Multi-Agent Explainable Requirements-Verification Framework for Web Applications"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "ReqVerify Research Team" }
+]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Testing",
+]
+
+dependencies = [
+    "anthropic>=0.40.0",
+    "langgraph>=0.2.70",
+    "langgraph-checkpoint-sqlite>=2.0.0",
+    "playwright>=1.49.0",
+    "pydantic>=2.10.0",
+    "click>=8.1.7",
+    "jinja2>=3.1.4",
+    "pyyaml>=6.0.2",
+    "pypdf>=5.0.0",
+    "numpy>=1.26.0",
+    "pandas>=2.2.0",
+    "scipy>=1.13.0",
+    "scikit-learn>=1.5.0",
+    "matplotlib>=3.9.0",
+    "seaborn>=0.13.0",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-playwright>=0.5.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[project.scripts]
+reqverify = "reqverify.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: tests requiring live Anthropic API key balance or external network",
+]

@@ -1,0 +1,8 @@
+- heading "Sign in to TechStore" [level=1]
+- text: "Enter your academic research credentials to continue"
+- textbox "Email address":
+  - text: testuser@example.com
+- textbox "Password"
+- button "Sign in"
+- link "Forgot your password?"
+- text: "Seeded test account: testuser@example.com"

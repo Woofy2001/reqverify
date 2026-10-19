@@ -1,0 +1,17 @@
+- heading "Your Shopping Cart" [level=1]
+- list:
+  - listitem:
+    - heading "Quantum Pro Laptop" [level=3]
+    - text: "$1,299.00"
+    - button "Decrease quantity"
+    - spinbutton "Quantity":
+      - text: "1"
+    - button "Increase quantity"
+    - button "Remove item"
+- textbox "Discount code":
+  - text: ""
+- button "Apply Discount"
+- text: "Subtotal: $1,299.00"
+- text: "Discount: $0.00"
+- text: "Estimated Total: $1,299.00"
+- button "Proceed to Checkout"
