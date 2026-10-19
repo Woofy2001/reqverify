@@ -1,0 +1,102 @@
+{
+  "REQ-DEV-01": [
+    {
+      "source_requirement_id": "REQ-DEV-01",
+      "source_span": "The user interface shall provide an input field with the accessible name \"Task title\" and an \"Add Task\" button.",
+      "predicate_text": "An input field with accessible name 'Task title' and an 'Add Task' button are rendered.",
+      "is_testable": true,
+      "untestable_reason": null,
+      "extraction_confidence": 0.98,
+      "rationale": "Verifies presence of core task input controls."
+    },
+    {
+      "source_requirement_id": "REQ-DEV-01",
+      "source_span": "When the user enters a non-empty task description and activates the \"Add Task\" button, the system shall append the task to the active tasks list.",
+      "predicate_text": "Submitting a non-empty task title adds the new task to the visible active task list.",
+      "is_testable": true,
+      "untestable_reason": null,
+      "extraction_confidence": 0.96,
+      "rationale": "Verifies state update and list display on task creation."
+    }
+  ],
+  "REQ-DEV-02": [
+    {
+      "source_requirement_id": "REQ-DEV-02",
+      "source_span": "Each task item in the active list shall display a \"Complete Task\" button.",
+      "predicate_text": "Each active task item renders an actionable 'Complete Task' button.",
+      "is_testable": true,
+      "untestable_reason": null,
+      "extraction_confidence": 0.95,
+      "rationale": "Verifies availability of completion action on active items."
+    },
+    {
+      "source_requirement_id": "REQ-DEV-02",
+      "source_span": "Activating this button shall transition the task status from \"Active\" to \"Completed\" and update its status badge text accordingly.",
+      "predicate_text": "Clicking Complete Task transitions status badge text to Completed.",
+      "is_testable": true,
+      "untestable_reason": null,
+      "extraction_confidence": 0.94,
+      "rationale": "Verifies status transition and badge text change."
+    }
+  ],
+  "REQ-DEV-03": [
+    {
+      "source_requirement_id": "REQ-DEV-03",
+      "source_span": "The application shall provide a filter combobox with the accessible name \"Filter by priority\" containing options for \"All\", \"High\", \"Medium\", and \"Low\".",
+      "predicate_text": "Filter combobox named 'Filter by priority' contains options All, High, Medium, Low.",
+      "is_testable": true,
+      "untestable_reason": null,
+      "extraction_confidence": 0.97,
+      "rationale": "Verifies presence and options of priority filter combobox."
+    },
+    {
+      "source_requirement_id": "REQ-DEV-03",
+      "source_span": "Selecting a priority option shall restrict the visible task items to those matching the selected priority.",
+      "predicate_text": "Selecting a priority filters visible tasks to only match that priority level.",
+      "is_testable": true,
+      "untestable_reason": null,
+      "extraction_confidence": 0.93,
+      "rationale": "Verifies dynamic filtering behavior of task list."
+    }
+  ],
+  "REQ-DEV-04": [
+    {
+      "source_requirement_id": "REQ-DEV-04",
+      "source_span": "Each task item shall include a \"Delete Task\" button.",
+      "predicate_text": "Each task item provides an accessible Delete Task button.",
+      "is_testable": true,
+      "untestable_reason": null,
+      "extraction_confidence": 0.96,
+      "rationale": "Verifies existence of delete control per item."
+    },
+    {
+      "source_requirement_id": "REQ-DEV-04",
+      "source_span": "Activating this button shall remove the item from the list and decrease the total task count displayed in the header.",
+      "predicate_text": "Activating Delete Task removes item from DOM and decrements header task count.",
+      "is_testable": true,
+      "untestable_reason": null,
+      "extraction_confidence": 0.95,
+      "rationale": "Verifies task deletion and aggregate count update."
+    }
+  ],
+  "REQ-DEV-05": [
+    {
+      "source_requirement_id": "REQ-DEV-05",
+      "source_span": "The task management service shall transmit encrypted audit telemetry to an internal enterprise logging cluster upon every state change.",
+      "predicate_text": "Internal telemetry service transmits encrypted audit logs on state changes.",
+      "is_testable": false,
+      "untestable_reason": "Backend service telemetry only; no UI manifestation.",
+      "extraction_confidence": 0.92,
+      "rationale": "Categorizes non-observable backend auditing requirement."
+    },
+    {
+      "source_requirement_id": "REQ-DEV-05",
+      "source_span": "This process executes entirely in background workers and does not alter the user interface.",
+      "predicate_text": "Background audit execution has zero visible side effects on UI.",
+      "is_testable": false,
+      "untestable_reason": "Internal worker execution invisible in web UI.",
+      "extraction_confidence": 0.91,
+      "rationale": "Explicit non-observability clause of backend archival."
+    }
+  ]
+}
