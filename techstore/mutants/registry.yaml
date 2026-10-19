@@ -1,0 +1,75 @@
+version: "1.0.0"
+mutants:
+  - id: "M01"
+    module: "Login"
+    description: "Email validation regex accepts invalid email 'a@b' without top-level domain."
+    env_flag: "MUTANT=M01"
+    violated_conditions:
+      - "C-02.1"
+      - "C-02.2"
+
+  - id: "M02"
+    module: "Login"
+    description: "Minimum password length requirement of 6 characters is skipped."
+    env_flag: "MUTANT=M02"
+    violated_conditions:
+      - "C-03.1"
+      - "C-03.2"
+
+  - id: "M03"
+    module: "Catalog"
+    description: "Maximum price filter uses strict inequality (< instead of <=), excluding boundary items."
+    env_flag: "MUTANT=M03"
+    violated_conditions:
+      - "C-05.2"
+
+  - id: "M04"
+    module: "Catalog"
+    description: "Out of stock badge is suppressed when inventory stock count equals zero."
+    env_flag: "MUTANT=M04"
+    violated_conditions:
+      - "C-06.1"
+
+  - id: "M05"
+    module: "Cart"
+    description: "Shopping cart line total calculation ignores item quantity (price * 1)."
+    env_flag: "MUTANT=M05"
+    violated_conditions:
+      - "C-08.1"
+      - "C-08.2"
+
+  - id: "M06"
+    module: "Cart"
+    description: "Promotional discount is applied inverted (added to subtotal instead of subtracted)."
+    env_flag: "MUTANT=M06"
+    violated_conditions:
+      - "C-10.2"
+
+  - id: "M07"
+    module: "Checkout"
+    description: "Step 1 shipping address validation is omitted, permitting progression to Step 2 with empty address."
+    env_flag: "MUTANT=M07"
+    violated_conditions:
+      - "C-12.2"
+
+  - id: "M08"
+    module: "Checkout"
+    description: "Checkout summary grand total calculation omits shipping charges."
+    env_flag: "MUTANT=M08"
+    violated_conditions:
+      - "C-13.2"
+
+  - id: "M09"
+    module: "Admin"
+    description: "Order status transition to 'Shipped' is rejected by admin fulfillment controller."
+    env_flag: "MUTANT=M09"
+    violated_conditions:
+      - "C-15.1"
+      - "C-15.2"
+
+  - id: "M10"
+    module: "Cart"
+    description: "Shopping cart state is retained rather than cleared upon successful order placement."
+    env_flag: "MUTANT=M10"
+    violated_conditions:
+      - "C-14.1"

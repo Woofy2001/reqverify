@@ -3,3 +3,7 @@ node_modules
 .git
 data/*.db-journal
 npm-debug.log*
+
+# Invariant D6: Mutant definitions and answer-key metadata MUST NOT be copied into SUT container
+mutants
+mutants/registry.yaml

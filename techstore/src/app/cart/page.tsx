@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { isMutantActive } from "@/lib/mutants";
 
 interface CartItem {
   id: string;
@@ -52,6 +53,12 @@ export default function CartPage() {
     saveCart(updated);
   };
 
+  const updateQuantityDirect = (id: string, newQty: number) => {
+    const updated = items
+      .map((item) => (item.id === id ? { ...item, qty: Math.max(1, newQty) } : item));
+    saveCart(updated);
+  };
+
   const removeItem = (id: string) => {
     saveCart(items.filter((it) => it.id !== id));
   };
@@ -82,16 +89,23 @@ export default function CartPage() {
 
       setDiscountPercent(data.discount_percent);
       setAppliedCoupon(data.code);
-      setCouponSuccess(data.message);
+      setCouponSuccess(`${data.message} Coupon ${data.code} applied.`);
     } catch {
       setCouponError("Failed to apply discount code.");
     }
   };
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.qty, 0);
+  // M05 Defect: Line total / subtotal calculation ignores quantity
+  const subtotal = items.reduce(
+    (acc, item) => acc + item.price * (isMutantActive("M05") ? 1 : item.qty),
+    0
+  );
   const discountAmount = (subtotal * discountPercent) / 100.0;
-  const shipping = items.length > 0 ? 15.0 : 0.0;
-  const total = Math.max(0, subtotal - discountAmount + shipping);
+  const shipping = items.length > 0 ? (subtotal > 100 ? 0.0 : 10.0) : 0.0;
+  // M06 Defect: Discount applied inverted (adds instead of subtracts)
+  const total = isMutantActive("M06")
+    ? subtotal + discountAmount + shipping
+    : Math.max(0, subtotal - discountAmount + shipping);
 
   const proceedToCheckout = () => {
     // Persist active cart checkout calculation in localStorage
@@ -135,7 +149,10 @@ export default function CartPage() {
               >
                 <div className="space-y-1">
                   <h3 className="font-bold text-white text-base">{item.name}</h3>
-                  <p className="text-sm text-cyan-400 font-semibold">${item.price.toFixed(2)}</p>
+                  {/* M05 Defect: Line total calculation ignores quantity */}
+                  <p className="text-sm text-cyan-400 font-semibold">
+                    ${(isMutantActive("M05") ? item.price : item.price * item.qty).toFixed(2)}
+                  </p>
                 </div>
 
                 <div className="flex items-center space-x-3">
@@ -147,12 +164,14 @@ export default function CartPage() {
                     -
                   </button>
 
-                  <span
-                    aria-label={`Quantity of ${item.name}`}
-                    className="w-10 text-center font-bold text-white text-sm"
-                  >
-                    {item.qty}
-                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    aria-label={`Quantity for ${item.name}`}
+                    value={item.qty}
+                    onChange={(e) => updateQuantityDirect(item.id, parseInt(e.target.value) || 1)}
+                    className="w-12 text-center font-bold text-white text-sm bg-slate-950 border border-slate-700 rounded py-1 focus:ring-1 focus:ring-cyan-500"
+                  />
 
                   <button
                     onClick={() => updateQuantity(item.id, 1)}
@@ -215,7 +234,7 @@ export default function CartPage() {
                     id="discount-code"
                     type="text"
                     aria-label="Discount code"
-                    placeholder="e.g. SAVE20"
+                    placeholder="Promo code (try SAVE20)"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     className="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 uppercase"

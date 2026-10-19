@@ -113,7 +113,16 @@ export default function AdminOrdersPage() {
                       {ord.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right space-x-2">
+                    {ord.status !== "Shipped" && (
+                      <button
+                        onClick={() => handleStatusChange(ord.id, "Shipped")}
+                        aria-label={`Mark Shipped for order ${ord.id}`}
+                        className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold"
+                      >
+                        Mark Shipped
+                      </button>
+                    )}
                     <select
                       aria-label={`Update status for ${ord.id}`}
                       value={ord.status}

@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb, Order } from "@/lib/db";
+import { isMutantActive } from "@/lib/mutants";
 
 export async function GET() {
   try {
@@ -52,11 +53,19 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
   try {
     const { order_id, status } = await req.json();
     if (!order_id || !status) {
       return NextResponse.json({ error: "order_id and status are required." }, { status: 400 });
+    }
+
+    // M09 Defect: Admin shipped status update is rejected
+    if (isMutantActive("M09", req) && status === "Shipped") {
+      return NextResponse.json(
+        { error: "Admin status change to 'Shipped' is rejected under M09 defect." },
+        { status: 400 }
+      );
     }
 
     const db = getDb();

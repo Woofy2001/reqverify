@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { isMutantActive } from "@/lib/mutants";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,6 +17,32 @@ export default function LoginPage() {
     setError(null);
     setSuccess(null);
     setLoading(true);
+
+    // M01 Defect: Email validation regex accepts 'a@b'
+    if (isMutantActive("M01")) {
+      const brokenRegex = /^[^\s@]+@[^\s@]+$/;
+      if (!brokenRegex.test(email)) {
+        setError("Invalid email format.");
+        setLoading(false);
+        return;
+      }
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError("Invalid email format. Must include a valid domain (e.g. user@example.com)");
+        setLoading(false);
+        return;
+      }
+    }
+
+    // M02 Defect: Minimum password length skipped
+    if (!isMutantActive("M02")) {
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters.");
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       const res = await fetch("/api/auth", {
@@ -72,7 +99,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div className="space-y-1.5">
             <label htmlFor="email" className="block text-sm font-medium text-slate-300">
               Email address

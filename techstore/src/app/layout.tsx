@@ -12,8 +12,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const envMutant = (process.env.MUTANT || "").trim().toUpperCase();
+
   return (
     <html lang="en">
+      <head>
+        {envMutant && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `if(!document.cookie.includes('reqverify_mutant=')){document.cookie='reqverify_mutant=${envMutant};path=/;max-age=86400';}`,
+            }}
+          />
+        )}
+      </head>
       <body className="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
         <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">

@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb, Product } from "@/lib/db";
+import { isMutantActive } from "@/lib/mutants";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
@@ -17,7 +18,9 @@ export async function GET(req: Request) {
     }
 
     if (maxPrice) {
-      query += " AND price <= ?";
+      // M03 Defect: Strict inequality (< instead of <=)
+      const op = isMutantActive("M03", req) ? "<" : "<=";
+      query += ` AND price ${op} ?`;
       params.push(parseFloat(maxPrice));
     }
 

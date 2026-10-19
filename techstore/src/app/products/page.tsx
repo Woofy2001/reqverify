@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Product } from "@/lib/db";
+import { isMutantActive } from "@/lib/mutants";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -120,7 +121,7 @@ export default function ProductsPage() {
           <input
             id="price-filter"
             type="number"
-            aria-label="Maximum price"
+            aria-label="Filter by maximum price"
             placeholder="e.g. 500"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
@@ -154,17 +155,20 @@ export default function ProductsPage() {
                 <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
                   {product.category}
                 </span>
-                <span
-                  role="status"
-                  aria-label={product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
-                  className={`text-xs font-medium px-2 py-0.5 rounded ${
-                    product.stock > 0
-                      ? "bg-emerald-950/80 text-emerald-300 border border-emerald-800/60"
-                      : "bg-rose-950/80 text-rose-300 border border-rose-800/60"
-                  }`}
-                >
-                  {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
-                </span>
+                {/* M04 Defect: Suppress 'Out of stock' badge when stock=0 */}
+                {(!isMutantActive("M04") || product.stock > 0) && (
+                  <span
+                    role="status"
+                    aria-label={product.stock > 0 ? `In Stock (${product.stock})` : "Out of stock"}
+                    className={`text-xs font-medium px-2 py-0.5 rounded ${
+                      product.stock > 0
+                        ? "bg-emerald-950/80 text-emerald-300 border border-emerald-800/60"
+                        : "bg-rose-950/80 text-rose-300 border border-rose-800/60"
+                    }`}
+                  >
+                    {product.stock > 0 ? `In Stock (${product.stock})` : "Out of stock"}
+                  </span>
+                )}
               </div>
 
               <h3 className="text-lg font-bold text-white tracking-tight">

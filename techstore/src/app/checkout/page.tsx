@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { isMutantActive } from "@/lib/mutants";
 
 export default function CheckoutPage() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -21,7 +22,7 @@ export default function CheckoutPage() {
   const [cvc, setCvc] = useState("123");
 
   // Summary & Submission
-  const [summary, setSummary] = useState<any>({ subtotal: 0, discountAmount: 0, shipping: 15.0, total: 15.0 });
+  const [summary, setSummary] = useState<any>({ subtotal: 0, discountAmount: 0, shipping: 10.0, total: 10.0 });
   const [orderResult, setOrderResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,6 +32,11 @@ export default function CheckoutPage() {
       const storedSummary = JSON.parse(localStorage.getItem("techstore_checkout_summary") || "{}");
       if (storedSummary.subtotal) {
         setSummary(storedSummary);
+      } else {
+        const cartItems = JSON.parse(localStorage.getItem("techstore_cart") || "[]");
+        const sub = cartItems.reduce((acc: number, it: any) => acc + it.price * (it.qty || 1), 0);
+        const ship = sub > 0 ? (sub > 100 ? 0.0 : 10.0) : 0.0;
+        setSummary({ subtotal: sub, discountAmount: 0, shipping: ship, total: sub + ship });
       }
     } catch {
       // default summary
@@ -65,9 +71,11 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Clear shopping cart on successful checkout
-      localStorage.removeItem("techstore_cart");
-      localStorage.removeItem("techstore_checkout_summary");
+      // M10 Defect: Cart is not cleared after successful checkout
+      if (!isMutantActive("M10")) {
+        localStorage.removeItem("techstore_cart");
+        localStorage.removeItem("techstore_checkout_summary");
+      }
 
       setOrderResult(data);
       setStep(4);
@@ -111,274 +119,298 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      {/* STEP 1: Shipping Address */}
-      {step === 1 && (
-        <div className="p-8 rounded-xl bg-slate-900 border border-slate-800 space-y-6">
-          <h2 className="text-xl font-bold text-white">Shipping Address</h2>
+      {step < 4 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-2 space-y-6">
+            {/* STEP 1: Shipping Address */}
+            {step === 1 && (
+              <div className="p-8 rounded-xl bg-slate-900 border border-slate-800 space-y-6">
+                <h2 className="text-xl font-bold text-white">Shipping Address</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2 space-y-1.5">
-              <label htmlFor="fullname" className="block text-xs font-semibold text-slate-300">
-                Full name
-              </label>
-              <input
-                id="fullname"
-                type="text"
-                aria-label="Full name"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-              />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label htmlFor="fullname" className="block text-xs font-semibold text-slate-300">
+                      Full name
+                    </label>
+                    <input
+                      id="fullname"
+                      type="text"
+                      aria-label="Full name"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                    />
+                  </div>
 
-            <div className="md:col-span-2 space-y-1.5">
-              <label htmlFor="street" className="block text-xs font-semibold text-slate-300">
-                Street address
-              </label>
-              <input
-                id="street"
-                type="text"
-                aria-label="Street address"
-                required
-                value={streetAddress}
-                onChange={(e) => setStreetAddress(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-              />
-            </div>
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label htmlFor="street" className="block text-xs font-semibold text-slate-300">
+                      Street address
+                    </label>
+                    <input
+                      id="street"
+                      type="text"
+                      aria-label="Street address"
+                      required
+                      value={streetAddress}
+                      onChange={(e) => setStreetAddress(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                    />
+                  </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="city" className="block text-xs font-semibold text-slate-300">
-                City
-              </label>
-              <input
-                id="city"
-                type="text"
-                aria-label="City"
-                required
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-              />
-            </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="city" className="block text-xs font-semibold text-slate-300">
+                      City
+                    </label>
+                    <input
+                      id="city"
+                      type="text"
+                      aria-label="City"
+                      required
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                    />
+                  </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="state" className="block text-xs font-semibold text-slate-300">
-                State / Province
-              </label>
-              <select
-                id="state"
-                aria-label="State / Province"
-                value={stateProv}
-                onChange={(e) => setStateProv(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-              >
-                <option value="California">California</option>
-                <option value="New York">New York</option>
-                <option value="Texas">Texas</option>
-                <option value="Washington">Washington</option>
-              </select>
-            </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="state" className="block text-xs font-semibold text-slate-300">
+                      State / Province
+                    </label>
+                    <select
+                      id="state"
+                      aria-label="State / Province"
+                      value={stateProv}
+                      onChange={(e) => setStateProv(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                    >
+                      <option value="California">California</option>
+                      <option value="New York">New York</option>
+                      <option value="Texas">Texas</option>
+                      <option value="Washington">Washington</option>
+                    </select>
+                  </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="postal" className="block text-xs font-semibold text-slate-300">
-                Postal code
-              </label>
-              <input
-                id="postal"
-                type="text"
-                aria-label="Postal code"
-                required
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-              />
-            </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="postal" className="block text-xs font-semibold text-slate-300">
+                      Postal code
+                    </label>
+                    <input
+                      id="postal"
+                      type="text"
+                      aria-label="Postal code"
+                      required
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                    />
+                  </div>
 
-            <div className="md:col-span-2 pt-2 flex items-center space-x-2">
-              <input
-                id="billing-match"
-                type="checkbox"
-                aria-label="Billing address matches shipping address"
-                checked={billingMatches}
-                onChange={(e) => setBillingMatches(e.target.checked)}
-                className="w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500 bg-slate-950 border-slate-700"
-              />
-              <label htmlFor="billing-match" className="text-sm text-slate-300">
-                Billing address matches shipping address
-              </label>
-            </div>
-          </div>
+                  <div className="md:col-span-2 pt-2 flex items-center space-x-2">
+                    <input
+                      id="billing-match"
+                      type="checkbox"
+                      aria-label="Billing address matches shipping address"
+                      checked={billingMatches}
+                      onChange={(e) => setBillingMatches(e.target.checked)}
+                      className="w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500 bg-slate-950 border-slate-700"
+                    />
+                    <label htmlFor="billing-match" className="text-sm text-slate-300">
+                      Billing address matches shipping address
+                    </label>
+                  </div>
+                </div>
 
-          <button
-            onClick={() => {
-              if (!fullName || !streetAddress || !city || !postalCode) {
-                setError("Please fill out all required address fields.");
-                return;
-              }
-              setError(null);
-              setStep(2);
-            }}
-            aria-label="Continue to Payment"
-            className="w-full py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm transition-all focus:ring-2 focus:ring-cyan-400"
-          >
-            Continue to Payment
-          </button>
-        </div>
-      )}
-
-      {/* STEP 2: Payment Method */}
-      {step === 2 && (
-        <div className="p-8 rounded-xl bg-slate-900 border border-slate-800 space-y-6">
-          <h2 className="text-xl font-bold text-white">Payment Method</h2>
-
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label htmlFor="cardname" className="block text-xs font-semibold text-slate-300">
-                Cardholder name
-              </label>
-              <input
-                id="cardname"
-                type="text"
-                aria-label="Cardholder name"
-                required
-                value={cardName}
-                onChange={(e) => setCardName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="cardnum" className="block text-xs font-semibold text-slate-300">
-                Card number
-              </label>
-              <input
-                id="cardnum"
-                type="text"
-                aria-label="Card number"
-                required
-                value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label htmlFor="expdate" className="block text-xs font-semibold text-slate-300">
-                  Expiration date
-                </label>
-                <input
-                  id="expdate"
-                  type="text"
-                  aria-label="Expiration date"
-                  placeholder="MM/YY"
-                  required
-                  value={expDate}
-                  onChange={(e) => setExpDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="cvc" className="block text-xs font-semibold text-slate-300">
-                  CVC
-                </label>
-                <input
-                  id="cvc"
-                  type="password"
-                  aria-label="CVC"
-                  maxLength={4}
-                  required
-                  value={cvc}
-                  onChange={(e) => setCvc(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex space-x-4 pt-2">
-            <button
-              onClick={() => setStep(1)}
-              aria-label="Back to Shipping"
-              className="w-1/3 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm border border-slate-700"
-            >
-              Back to Shipping
-            </button>
-            <button
-              onClick={() => {
-                if (!cardName || !cardNumber || !expDate || !cvc) {
-                  setError("Please fill out all required payment details.");
-                  return;
-                }
-                setError(null);
-                setStep(3);
-              }}
-              aria-label="Continue to Review"
-              className="w-2/3 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm transition-all focus:ring-2 focus:ring-cyan-400"
-            >
-              Continue to Review
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 3: Review & Place Order */}
-      {step === 3 && (
-        <div className="p-8 rounded-xl bg-slate-900 border border-slate-800 space-y-6">
-          <h2 className="text-xl font-bold text-white">Review & Place Order</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg bg-slate-950 border border-slate-800 text-sm">
-            <div>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Ship to:</span>
-              <p className="text-white font-medium mt-1">{fullName}</p>
-              <p className="text-slate-400">{streetAddress}, {city}, {stateProv} {postalCode}</p>
-            </div>
-            <div>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Payment:</span>
-              <p className="text-white font-medium mt-1">Card ending in {cardNumber.slice(-4)}</p>
-              <p className="text-slate-400">Exp: {expDate}</p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2 text-sm">
-            <div className="flex justify-between text-slate-300">
-              <span>Subtotal:</span>
-              <span className="text-white font-semibold">${summary.subtotal.toFixed(2)}</span>
-            </div>
-            {summary.discountAmount > 0 && (
-              <div className="flex justify-between text-emerald-400">
-                <span>Discount:</span>
-                <span>-${summary.discountAmount.toFixed(2)}</span>
+                <button
+                  onClick={() => {
+                    // M07 Defect: Omit address validation
+                    if (!isMutantActive("M07")) {
+                      if (!streetAddress.trim() || !city.trim()) {
+                        setError("Shipping address and city are required.");
+                        return;
+                      }
+                    }
+                    setError(null);
+                    setStep(2);
+                  }}
+                  aria-label="Continue to Payment"
+                  className="w-full py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm transition-all focus:ring-2 focus:ring-cyan-400"
+                >
+                  Continue to Payment
+                </button>
               </div>
             )}
-            <div className="flex justify-between text-slate-300">
-              <span>Shipping:</span>
-              <span className="text-white font-semibold">${summary.shipping.toFixed(2)}</span>
-            </div>
-            <div className="border-t border-slate-800 pt-2 flex justify-between text-base font-bold text-white">
-              <span>Total:</span>
-              <span className="text-cyan-400">${summary.total.toFixed(2)}</span>
-            </div>
+
+            {/* STEP 2: Payment Method */}
+            {step === 2 && (
+              <div className="p-8 rounded-xl bg-slate-900 border border-slate-800 space-y-6">
+                <h2 className="text-xl font-bold text-white">Payment Method</h2>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="cardname" className="block text-xs font-semibold text-slate-300">
+                      Cardholder name
+                    </label>
+                    <input
+                      id="cardname"
+                      type="text"
+                      aria-label="Cardholder name"
+                      required
+                      value={cardName}
+                      onChange={(e) => setCardName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="cardnum" className="block text-xs font-semibold text-slate-300">
+                      Card number
+                    </label>
+                    <input
+                      id="cardnum"
+                      type="text"
+                      aria-label="Card number"
+                      required
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label htmlFor="expdate" className="block text-xs font-semibold text-slate-300">
+                        Expiration date
+                      </label>
+                      <input
+                        id="expdate"
+                        type="text"
+                        aria-label="Expiration date"
+                        placeholder="MM/YY"
+                        required
+                        value={expDate}
+                        onChange={(e) => setExpDate(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="cvc" className="block text-xs font-semibold text-slate-300">
+                        CVC
+                      </label>
+                      <input
+                        id="cvc"
+                        type="password"
+                        aria-label="CVC"
+                        maxLength={4}
+                        required
+                        value={cvc}
+                        onChange={(e) => setCvc(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-cyan-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex space-x-4 pt-2">
+                  <button
+                    onClick={() => setStep(1)}
+                    aria-label="Back to Shipping"
+                    className="w-1/3 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm border border-slate-700"
+                  >
+                    Back to Shipping
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!cardNumber.trim()) {
+                        setError("Please fill out all required payment details.");
+                        return;
+                      }
+                      setError(null);
+                      setStep(3);
+                    }}
+                    aria-label="Continue to Review"
+                    className="w-2/3 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm transition-all focus:ring-2 focus:ring-cyan-400"
+                  >
+                    Continue to Review
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Review & Place Order */}
+            {step === 3 && (
+              <div className="p-8 rounded-xl bg-slate-900 border border-slate-800 space-y-6">
+                <h2 className="text-xl font-bold text-white">Review & Place Order</h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg bg-slate-950 border border-slate-800 text-sm">
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Ship to:</span>
+                    <p className="text-white font-medium mt-1">{fullName || "Research Lead"}</p>
+                    <p className="text-slate-400">{streetAddress}, {city}, {stateProv} {postalCode}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Payment:</span>
+                    <p className="text-white font-medium mt-1">Card ending in {cardNumber.slice(-4) || "4242"}</p>
+                    <p className="text-slate-400">Exp: {expDate}</p>
+                  </div>
+                </div>
+
+                <div className="flex space-x-4 pt-2">
+                  <button
+                    onClick={() => setStep(2)}
+                    aria-label="Back to Payment"
+                    className="w-1/3 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm border border-slate-700"
+                  >
+                    Back to Payment
+                  </button>
+                  <button
+                    disabled={loading}
+                    onClick={handlePlaceOrder}
+                    aria-label="Place Order"
+                    className="w-2/3 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-lg shadow-cyan-950"
+                  >
+                    {loading ? "Placing Order..." : "Place Order"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="flex space-x-4 pt-2">
-            <button
-              onClick={() => setStep(2)}
-              aria-label="Back to Payment"
-              className="w-1/3 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm border border-slate-700"
-            >
-              Back to Payment
-            </button>
-            <button
-              disabled={loading}
-              onClick={handlePlaceOrder}
-              aria-label="Place Order"
-              className="w-2/3 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-lg shadow-cyan-950"
-            >
-              {loading ? "Placing Order..." : "Place Order"}
-            </button>
+          {/* Persistent Order Summary Sidebar */}
+          <div className="p-6 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
+            <h2 className="text-lg font-bold text-white border-b border-slate-800 pb-3">
+              Order Summary
+            </h2>
+
+            <div className="space-y-2.5 text-sm">
+              <div className="flex justify-between text-slate-300">
+                <span>Subtotal:</span>
+                <span className="font-semibold text-white">${summary.subtotal.toFixed(2)}</span>
+              </div>
+              {summary.discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-400">
+                  <span>Discount:</span>
+                  <span>-${summary.discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {/* M08 Defect: Order total omits shipping */}
+              <div className="flex justify-between text-slate-300">
+                <span>Shipping:</span>
+                <span className="text-white font-semibold">
+                  ${(isMutantActive("M08") ? 0.0 : summary.shipping).toFixed(2)}
+                </span>
+              </div>
+              <div className="border-t border-slate-800 pt-3 flex justify-between text-base font-bold text-white">
+                <span>Total:</span>
+                <span aria-label="Order Grand Total" className="text-cyan-400 font-bold">
+                  ${(isMutantActive("M08")
+                    ? Math.max(0, summary.subtotal - (summary.discountAmount || 0))
+                    : summary.total
+                  ).toFixed(2)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
