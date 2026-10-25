@@ -1,0 +1,24 @@
+- heading "Product Catalog" [level=1]
+- link "Shopping Cart"
+- combobox "Filter by category":
+  - option "All Categories" [selected]
+  - option "Laptops"
+  - option "Audio"
+  - option "Accessories"
+- spinbutton "Filter by maximum price"
+- list:
+  - listitem:
+    - status "In Stock (15)"
+    - heading "Quantum Pro Laptop" [level=3]
+    - text: "$1,299.00"
+    - button "Add Quantum Pro Laptop to cart"
+  - listitem:
+    - status "Out of stock"
+    - heading "BassMax Portable Speaker" [level=3]
+    - text: "$79.00"
+    - button "Add BassMax Portable Speaker to cart" [disabled]
+  - listitem:
+    - status "In Stock (50)"
+    - heading "ErgoPrecision Wireless Mouse" [level=3]
+    - text: "$49.00"
+    - button "Add ErgoPrecision Wireless Mouse to cart"

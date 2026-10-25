@@ -69,13 +69,7 @@ class CoverageMatrix(BaseModel):
 
 
 # ---- Agent 2 -----------------------------------------------------------------------
-class UIElementSelector(BaseModel):
-    """Semantic UI element selector mapped by Agent 2 from ARIA snapshot."""
-    element_id: str
-    role: str                     # ARIA role from aria_snapshot, e.g. button, textbox
-    accessible_name: str
-    locator_code: str             # e.g. page.get_by_role("button", name="Add to cart")
-    page_url: str
+from reqverify.schemas.selectors import UIElementSelector, PageSnapshot, SelectorMap
 
 
 # ---- Agent 3: execution evidence vs LLM judgement ----------------------------------

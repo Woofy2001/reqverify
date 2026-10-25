@@ -1,0 +1,30 @@
+- heading "Admin Order Fulfillment" [level=1]
+- table "Customer Orders Table":
+  - rowgroup:
+    - row "Order ID Customer Email Date Total Status Fulfillment Action":
+      - columnheader "Order ID"
+      - columnheader "Customer Email"
+      - columnheader "Date"
+      - columnheader "Total"
+      - columnheader "Status"
+      - columnheader "Fulfillment Action"
+  - rowgroup:
+    - row "ORD-1001 test@example.com 10/18/2026 $1,299.00 Processing Mark Shipped":
+      - cell "ORD-1001"
+      - cell "test@example.com"
+      - cell "10/18/2026"
+      - cell "$1,299.00"
+      - cell "Processing":
+        - status "Status: Processing"
+      - cell "Mark Shipped":
+        - button "Mark Shipped for order ORD-1001"
+        - combobox "Update status for ORD-1001"
+    - row "ORD-1002 test@example.com 10/19/2026 $138.00 Shipped":
+      - cell "ORD-1002"
+      - cell "test@example.com"
+      - cell "10/19/2026"
+      - cell "$138.00"
+      - cell "Shipped":
+        - status "Status: Shipped"
+      - cell:
+        - combobox "Update status for ORD-1002"
