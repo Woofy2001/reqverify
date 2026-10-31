@@ -35,3 +35,14 @@ def test_fake_client_unregistered_schema_raises_key_error():
     client = FakeLLMClient()
     with pytest.raises(KeyError, match="No recorded response registered"):
         client.parse("sys", "user", SampleContract)
+
+
+def test_fake_client_sequence_returns_responses_in_order_then_repeats_last():
+    class Out(BaseModel):
+        n: int
+
+    fake = FakeLLMClient()
+    fake.register_sequence(Out, [Out(n=1), {"n": 2}])
+    assert fake.parse("s", "u", Out)[0].n == 1
+    assert fake.parse("s", "u", Out)[0].n == 2
+    assert fake.parse("s", "u", Out)[0].n == 2  # exhausted: last response repeats

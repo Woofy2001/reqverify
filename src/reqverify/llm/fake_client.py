@@ -15,7 +15,16 @@ class FakeLLMClient:
         self.call_history: List[Dict[str, Any]] = []
         self._schema_responses: Dict[Type[BaseModel], Any] = {}
         self._prompt_responses: Dict[str, Any] = {}
+        self._schema_sequences: Dict[Type[BaseModel], List[Any]] = {}
+        self._sequence_cursor: Dict[Type[BaseModel], int] = {}
         self.cumulative_cost_usd: float = 0.0
+
+    def register_sequence(self, schema: Type[T], responses: List[Any]):
+        """Register ordered responses for a schema; each parse() consumes one, the last repeats once exhausted."""
+        if not responses:
+            raise ValueError("register_sequence requires at least one response")
+        self._schema_sequences[schema] = list(responses)
+        self._sequence_cursor[schema] = 0
 
     def register_response(self, schema: Type[T], response: T | dict | str):
         """Register a fixture response to return whenever this schema is requested."""
@@ -39,7 +48,14 @@ class FakeLLMClient:
             if sub in user:
                 return self._resolve_response(resp, schema)
 
-        # 2. Check schema-level fixtures
+        # 2a. Ordered per-schema sequences (multi-iteration loops)
+        if schema in self._schema_sequences:
+            seq = self._schema_sequences[schema]
+            idx = min(self._sequence_cursor[schema], len(seq) - 1)
+            self._sequence_cursor[schema] += 1
+            return self._resolve_response(seq[idx], schema)
+
+        # 2b. Check schema-level fixtures
         if schema in self._schema_responses:
             return self._resolve_response(self._schema_responses[schema], schema)
 
