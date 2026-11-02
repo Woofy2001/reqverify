@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReqVerify Audit Report — {{ summary.run_id }}</title>
+  <style>
+    :root {
+      --bg-canvas: #0b0f17;
+      --bg-surface: #111827;
+      --bg-elevated: #172033;
+      --bg-code: #080c14;
+      --border-subtle: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.18);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent-teal: #14b8a6;
+      --pass-bg: #064e3b;
+      --pass-border: #10b981;
+      --pass-text: #d1fae5;
+      --fail-bg: #881337;
+      --fail-border: #f43f5e;
+      --fail-text: #ffe4e6;
+      --error-bg: #7c2d12;
+      --error-border: #f97316;
+      --error-text: #ffedd5;
+      --untested-bg: #1e293b;
+      --untested-border: #64748b;
+      --untested-text: #e2e8f0;
+      --amber-bg: rgba(120, 53, 15, 0.35);
+      --amber-badge-bg: #78350f;
+      --amber-border: #f59e0b;
+      --amber-text: #fef3c7;
+      --radius-outer: 14px;
+      --radius-inner: 8px;
+      --font-sans: "Manrope", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.55;
+      padding: 2.5rem 1.5rem 4rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* Editorial Asymmetric Header */
+    .report-header {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 1.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 2rem;
+      align-items: end;
+    }
+
+    @media (max-width: 860px) {
+      .report-header {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-teal);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .meta-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-outer);
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem 1rem;
+      font-size: 0.82rem;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .meta-label {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-value {
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    /* Summary Bento Strip */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .summary-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-outer);
+      padding: 1.15rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 96px;
+    }
+
+    .summary-card-label {
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .summary-card-value {
+      font-size: 1.85rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      margin-top: 0.35rem;
+    }
+
+    .value-pass { color: var(--pass-text); }
+    .value-fail { color: var(--fail-text); }
+    .value-error { color: var(--error-text); }
+    .value-untested { color: var(--untested-text); }
+    .value-confidence { color: var(--accent-teal); }
+
+    /* Filter Controls */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .filter-btn {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-inner);
+      padding: 0.45rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms ease, background-color 150ms ease;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .filter-btn:active {
+      transform: scale(0.97);
+    }
+
+    .filter-btn[aria-pressed="true"] {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--accent-teal);
+    }
+
+    . filter-btn:focus-visible {
+      outline: 2px solid var(--accent-teal);
+      outline-offset: 2px;
+    }
+
+    /* Verification Matrix Accordions */
+    .matrix-section h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .condition-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    details.condition-accordion {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-outer);
+      overflow: hidden;
+      transition: border-color 150ms ease;
+    }
+
+    details.condition-accordion.needs-human-review-amber {
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+    }
+
+    summary.condition-summary-row {
+      list-style: none;
+      cursor: pointer;
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 110px 180px 1fr 160px 140px;
+      gap: 1rem;
+      align-items: center;
+      user-select: none;
+    }
+
+    summary.condition-summary-row::-webkit-details-marker {
+      display: none;
+    }
+
+    summary.condition-summary-row:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    summary.condition-summary-row:focus-visible {
+      outline: 2px solid var(--accent-teal);
+      outline-offset: -2px;
+    }
+
+    @media (max-width: 960px) {
+      summary.condition-summary-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+      width: fit-content;
+    }
+
+    .status-PASS {
+      background: var(--pass-bg);
+      color: var(--pass-text);
+      border: 1px solid var(--pass-border);
+    }
+
+    .status-FAIL {
+      background: var(--fail-bg);
+      color: var(--fail-text);
+      border: 1px solid var(--fail-border);
+    }
+
+    .status-ERROR {
+      background: var(--error-bg);
+      color: var(--error-text);
+      border: 1px solid var(--error-border);
+    }
+
+    .status-UNTESTED {
+      background: var(--untested-bg);
+      color: var(--untested-text);
+      border: 1px solid var(--untested-border);
+    }
+
+    .human-review-pill {
+      display: inline-flex;
+      align-items: center;
+      background: var(--amber-badge-bg);
+      color: var(--amber-text);
+      border: 1px solid var(--amber-border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      margin-left: 0.5rem;
+    }
+
+    .cond-id-cell {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .predicate-cell {
+      color: var(--text-primary);
+      font-size: 0.92rem;
+      font-weight: 500;
+    }
+
+    .confidence-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .confidence-label {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .confidence-bar-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .confidence-bar-fill {
+      height: 100%;
+      background: var(--accent-teal);
+      border-radius: 999px;
+    }
+
+    .iter-cell {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* Expanded Details Panel */
+    .condition-details-panel {
+      padding: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(8, 12, 20, 0.55);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 900px) {
+      .condition-details-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .detail-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-inner);
+      padding: 1rem;
+    }
+
+    .detail-block.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .detail-heading {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .detail-text {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+    }
+
+    pre.code-block {
+      background: var(--bg-code);
+      color: #e2e8f0;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .artifact-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .artifact-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      text-decoration: none;
+    }
+
+    .artifact-link:hover {
+      border-color: var(--accent-teal);
+      color: var(--accent-teal);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="report-header">
+      <div>
+        <div class="eyebrow">ReqVerify Multi-Agent Verification Audit</div>
+        <h1>Requirements Verification Report</h1>
+        <p class="subtitle">
+          Auditable per-condition verification verdicts, calibrated confidence scores, and Playwright execution traces.
+        </p>
+      </div>
+      <div class="meta-panel" aria-label="Run Metadata">
+        <div class="meta-item">
+          <span class="meta-label">Run ID</span>
+          <span class="meta-value">{{ summary.run_id }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Model / Effort</span>
+          <span class="meta-value">{{ summary.manifest.model }} ({{ summary.manifest.effort }})</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Target SUT / Variant</span>
+          <span class="meta-value">{{ summary.manifest.app_url }} [{{ summary.manifest.mutant_id }}]</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Tokens / Cost</span>
+          <span class="meta-value">{{ summary.manifest.total_input_tokens + summary.manifest.total_output_tokens }} (${{ "%.3f"|format(summary.manifest.cost_estimate_usd) }})</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="summary-grid" aria-label="Verification Summary Metrics">
+      <div class="summary-card" data-testid="card-total">
+        <span class="summary-card-label">Total Conditions</span>
+        <span class="summary-card-value">{{ summary.total_conditions }}</span>
+      </div>
+      <div class="summary-card" data-testid="card-pass">
+        <span class="summary-card-label">Pass</span>
+        <span class="summary-card-value value-pass">{{ summary.status_counts["PASS"] }}</span>
+      </div>
+      <div class="summary-card" data-testid="card-fail">
+        <span class="summary-card-label">Fail</span>
+        <span class="summary-card-value value-fail">{{ summary.status_counts["FAIL"] }}</span>
+      </div>
+      <div class="summary-card" data-testid="card-error">
+        <span class="summary-card-label">Error</span>
+        <span class="summary-card-value value-error">{{ summary.status_counts["ERROR"] }}</span>
+      </div>
+      <div class="summary-card" data-testid="card-untested">
+        <span class="summary-card-label">Untested</span>
+        <span class="summary-card-value value-untested">{{ summary.status_counts["UNTESTED"] }}</span>
+      </div>
+      <div class="summary-card" data-testid="card-confidence">
+        <span class="summary-card-label">Mean Confidence</span>
+        <span class="summary-card-value value-confidence">{{ "%.1f"|format(summary.mean_confidence * 100) }}%</span>
+      </div>
+    </section>
+
+    <section class="matrix-section" aria-label="Condition Verification Matrix">
+      <div class="controls-bar">
+        <h2>Condition Verification Matrix</h2>
+        <div class="filter-group" role="group" aria-label="Filter conditions by status">
+          <button type="button" class="filter-btn" data-filter="ALL" aria-pressed="true">All ({{ summary.total_conditions }})</button>
+          <button type="button" class="filter-btn" data-filter="PASS" aria-pressed="false">Pass ({{ summary.status_counts["PASS"] }})</button>
+          <button type="button" class="filter-btn" data-filter="FAIL" aria-pressed="false">Fail ({{ summary.status_counts["FAIL"] }})</button>
+          <button type="button" class="filter-btn" data-filter="ERROR" aria-pressed="false">Error ({{ summary.status_counts["ERROR"] }})</button>
+          <button type="button" class="filter-btn" data-filter="UNTESTED" aria-pressed="false">Untested ({{ summary.status_counts["UNTESTED"] }})</button>
+          <button type="button" class="filter-btn" data-filter="REVIEW" aria-pressed="false">Needs Review ({{ summary.human_review_count }})</button>
+        </div>
+      </div>
+
+      <div class="condition-list">
+        {% for r in summary.results %}
+        <details
+          class="condition-accordion {% if r.needs_human_review %}needs-human-review-amber{% endif %}"
+          data-condition-id="{{ r.condition_id }}"
+          data-status="{{ r.execution_status }}"
+          data-needs-human-review="{{ 'true' if r.needs_human_review else 'false' }}"
+        >
+          <summary class="condition-summary-row">
+            <div>
+              <span class="status-badge status-{{ r.execution_status }}">{{ r.execution_status }}</span>
+            </div>
+            <div class="cond-id-cell">
+              {{ r.condition_id }}
+            </div>
+            <div class="predicate-cell">
+              {{ r.predicate_text or r.audit_rationale }}
+              {% if r.needs_human_review %}
+              <span class="human-review-pill">Needs Human Review</span>
+              {% endif %}
+            </div>
+            <div class="confidence-cell">
+              <span class="confidence-label">Conf: {{ "%.0f"|format(r.overall_confidence * 100) }}%</span>
+              <div class="confidence-bar-track" aria-hidden="true">
+                <div class="confidence-bar-fill" style="width: {{ (r.overall_confidence * 100)|round(0, 'floor') }}%;"></div>
+              </div>
+            </div>
+            <div class="iter-cell">
+              {% if r.execution_status == "UNTESTED" and r.untested_reason %}
+                {{ r.untested_reason }}
+              {% else %}
+                Critic iters: {{ r.critic_iterations }}
+              {% endif %}
+            </div>
+          </summary>
+
+          <div class="condition-details-panel">
+            <div class="detail-block">
+              <div class="detail-heading">Requirement Source Span ({{ r.requirement_id }})</div>
+              <p class="detail-text">{{ r.source_span or "N/A" }}</p>
+            </div>
+
+            <div class="detail-block">
+              <div class="detail-heading">Audit Rationale &amp; Critic Commentary</div>
+              <p class="detail-text">{{ r.audit_rationale }}</p>
+              {% if r.untested_reason %}
+              <p class="detail-text" style="margin-top: 0.4rem;">
+                <strong>Untested Reason:</strong> <code>{{ r.untested_reason }}</code>
+              </p>
+              {% endif %}
+            </div>
+
+            {% if r.test_script %}
+            <div class="detail-block full-width">
+              <div class="detail-heading">Generated Pytest-Playwright Script</div>
+              <pre class="code-block"><code>{{ r.test_script }}</code></pre>
+            </div>
+            {% endif %}
+
+            {% if r.stdout_tail %}
+            <div class="detail-block full-width">
+              <div class="detail-heading">Execution Telemetry / Stdout Tail</div>
+              <pre class="code-block"><code>{{ r.stdout_tail }}</code></pre>
+            </div>
+            {% endif %}
+
+            <div class="detail-block full-width">
+              <div class="detail-heading">Audit Evidence &amp; Playwright Trace Links</div>
+              <div class="artifact-links">
+                {% if r.trace_path %}
+                <a class="artifact-link" href="{{ r.trace_path }}" data-testid="trace-zip-link">
+                  Download Trace (.zip): {{ r.trace_path }}
+                </a>
+                <a
+                  class="artifact-link"
+                  href="https://trace.playwright.dev/?trace={{ r.trace_path | urlencode }}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="trace-viewer-link"
+                >
+                  Open in Playwright Trace Viewer
+                </a>
+                {% endif %}
+                {% if r.screenshot_path %}
+                <a class="artifact-link" href="{{ r.screenshot_path }}" data-testid="screenshot-link">
+                  View Screenshot: {{ r.screenshot_path }}
+                </a>
+                {% endif %}
+                {% if r.test_script_ref %}
+                <a class="artifact-link" href="{{ r.test_script_ref }}" data-testid="script-ref-link">
+                  Script File: {{ r.test_script_ref }}
+                </a>
+                {% endif %}
+                {% if not r.trace_path and not r.screenshot_path and not r.test_script_ref %}
+                <span class="detail-text">No trace archive recorded ({{ r.untested_reason or "skipped" }}).</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </details>
+        {% endfor %}
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const buttons = document.querySelectorAll(".filter-btn");
+      const rows = document.querySelectorAll("details.condition-accordion");
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const filter = btn.getAttribute("data-filter");
+          buttons.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+          rows.forEach((row) => {
+            const status = row.getAttribute("data-status");
+            const review = row.getAttribute("data-needs-human-review") === "true";
+            if (filter === "ALL") {
+              row.style.display = "";
+            } else if (filter === "REVIEW") {
+              row.style.display = review ? "" : "none";
+            } else {
+              row.style.display = status === filter ? "" : "none";
+            }
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

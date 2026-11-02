@@ -1,4 +1,4 @@
-﻿"""Agent 3 (part 1): Test Generator with assertion immutability (Invariant D7, Guide Â§3, Â§9).
+"""Agent 3 (part 1): Test Generator with assertion immutability (Invariant D7, Guide Â§3, Â§9).
 
 The Generator writes ONE self-contained pytest-playwright test per testable condition. The asserted
 expectation is derived from ``predicate_text`` in iteration 1 and is then *locked*: repair iterations may

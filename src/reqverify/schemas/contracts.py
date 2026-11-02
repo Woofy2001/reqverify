@@ -107,3 +107,14 @@ class RequirementVerificationResult(BaseModel):
     overall_confidence: float = Field(ge=0.0, le=1.0)
     audit_rationale: str
     needs_human_review: bool = False
+    # Optional extended telemetry for JSON/HTML audit reporting (Guide §9 Agent 4)
+    predicate_text: str = ""
+    source_span: str = ""
+    trace_path: Optional[str] = None
+    screenshot_path: Optional[str] = None
+    test_script: Optional[str] = None
+    probe_outcome: Optional[str] = None
+    exception_type: Optional[str] = None
+    stdout_tail: str = ""
+    critic_notes: str = ""
+    duration_s: float = 0.0
